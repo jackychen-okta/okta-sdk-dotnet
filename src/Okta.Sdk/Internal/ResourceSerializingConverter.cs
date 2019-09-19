@@ -42,11 +42,12 @@ namespace Okta.Sdk.Internal
             }
 
             var token = JToken.FromObject(resource.GetData(), serializer);
-            token = RemoveEmptyChildren(token);
+            var isUser = value is User;
+            token = RemoveEmptyChildren(token, isUser);
             token.WriteTo(writer);
         }
 
-        private static JToken RemoveEmptyChildren(JToken token)
+        private static JToken RemoveEmptyChildren(JToken token, bool isUser)
         {
             if (token.Type == JTokenType.Object)
             {
@@ -57,10 +58,10 @@ namespace Okta.Sdk.Internal
 
                     if (child.HasValues)
                     {
-                        child = RemoveEmptyChildren(child);
+                        child = RemoveEmptyChildren(child, isUser);
                     }
 
-                    if (!IsNull(child))
+                    if (!IsNull(child, isUser))
                     {
                         copy.Add(prop.Name, child);
                     }
@@ -73,10 +74,13 @@ namespace Okta.Sdk.Internal
         }
 
 #pragma warning disable SA1503 // Braces must not be omitted
-        private static bool IsNull(JToken token)
+        private static bool IsNull(JToken token, bool isUser)
         {
             if (token.Type == JTokenType.Object) return !token.HasValues;
-            if (token.Type == JTokenType.Null) return true;
+            if (token.Type == JTokenType.Null)
+            {
+                return !(isUser && token.Path.Equals("profile.secondEmail"));
+            }
 
             return false;
         }

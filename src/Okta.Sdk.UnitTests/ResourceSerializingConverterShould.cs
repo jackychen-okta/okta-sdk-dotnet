@@ -56,5 +56,26 @@ namespace Okta.Sdk.UnitTests
             serializedUser.Trim().Should().Contain("\"foo\":\"fooValue\"");
             serializedUser.Trim().Should().Contain("\"baz\":[]");
         }
+
+        [Fact]
+        public void KeepUserProfileStandardPropertiesNullInSerialization()
+        {
+            var user = new User()
+            {
+                Profile = new UserProfile()
+                {
+                    FirstName = "John",
+                },
+            };
+
+            user.Profile["bar"] = null;
+            user.Profile["secondEmail"] = null;
+
+            var serializer = new DefaultSerializer();
+            var serializedUser = serializer.Serialize(user);
+
+            serializedUser.Trim().Should().NotContain("\"bar\":");
+            serializedUser.Trim().Should().Contain("\"secondEmail\":null");
+        }
     }
 }
